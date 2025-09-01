@@ -1,0 +1,18 @@
+# Entorno virtual (no subir dependencias instaladas)
+venv/
+
+# Variables de entorno (claves, contraseñas, configuración)
+.env
+
+# Archivos de base de datos SQLite
+*.db
+
+# Archivos de caché y compilados de Python
+__pycache__/
+*.pyc
+
+# Archivos de logs
+*.log
+
+# Configuración local de VS Code
+.vscode/
