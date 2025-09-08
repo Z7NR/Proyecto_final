@@ -14,6 +14,7 @@ class DBAdvanceManager:
         try:
             self.conn = sqlite3.connect(self.DB_PATH) #variable definida arriba. Contiene la ruta.
             self.cursor = self.conn.cursor()
+            self.cursor.execute("PRAGMA foreign_keys = ON;")
             print(f"Conectado a la base de datos {self.DB_PATH}")
         except sqlite3.Error as e:
             print(f"Error al conectar a la base de datos: {e}")
