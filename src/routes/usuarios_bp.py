@@ -36,8 +36,22 @@ def login():
     else:
         return jsonify({"error": "Credenciales inválidas"}), 401
 
-"""@usuarios_bp.route("/actualizar", methods=["UPDATE"])    
-def update():
+@usuarios_bp.route("/crear", methods=["POST"])
+def crear_usuario():
     data = request.get_json()
+    crud = CRUD_function()
+    campos = ["nombres", "apellidos", "edad", "telefono", "email", "clave", "ciudad", "pais"]
+    valores = [data.get(c) for c in campos]
+    new_id = crud.create_user(*valores)
+    
+    if new_id:
+        return jsonify({"id": new_id}), 201
+    return jsonify({"error": "No se pudo crear usuario"}), 400
 
-"""
+@usuarios_bp.route("/listar", methods=["GET"])
+@token_required
+def listar_usuarios():
+    crud = CRUD_function()
+    usuarios = crud.read_users()
+    return jsonify(usuarios), 200
+
