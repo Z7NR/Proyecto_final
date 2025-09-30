@@ -1,7 +1,7 @@
 import jwt, datetime, os
 from dotenv import load_dotenv
 from src.utils.security import check_password
-from src.data_base import DBAdvanceManager
+from src.data.data_base import DBAdvanceManager
 
 load_dotenv() #<con esto cargo las variables del .evn
 SECRET_KEY = os.getenv("SECRET_KEY", "defaul_secret")

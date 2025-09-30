@@ -6,8 +6,8 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
-from data_base import DBAdvanceManager
-from functions.CRUD import CRUD_function
+from src.data.data_base import DBAdvanceManager
+from src.crud.usuarios_crud import CRUD_function
 
 if __name__ == "__main__":
     db = DBAdvanceManager()

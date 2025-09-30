@@ -1,9 +1,9 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from functools import wraps
-from src.functions.CRUD import CRUD_function
-from src.functions.auth import auth_function, verify_token #tenle un ojo a esta parte. Verify esta dentro de auth pero no la detecta sin especificar
+from src.crud.usuarios_crud import usuarios_crud
+from src.utils.auth import auth_function, verify_token #tenle un ojo a esta parte. Verify esta dentro de auth pero no la detecta sin especificar
 
-usuarios_bp = Blueprint("usuarios", __name__)
+usuarios_bp = Blueprint("usuarios", __name__, url_prefix="/api/usuarios")
 
 def token_required(f):
     @wraps(f)
@@ -19,16 +19,20 @@ def token_required(f):
         if not payload:
             return jsonify({"error": "Token inválido o expirado"}), 401
         # pasamos payload como primer argumento de la función protegida
-        return f(payload, *args, **kwargs)
+        g.user_payload = payload
+        g.user_id = payload.get("sub")
+        return f(*args, **kwargs)
     return decorated
 
 @usuarios_bp.route("/login", methods=["POST"])
 def login():
-    data = request.get_json()  # recibe { "email": "...", "clave": "..." }
-
-    if not data or not data.get("email") or not data.get("clave"):
+    data = request.get_json() or {}
+    email = data.get("email")
+    clave = data.get("clave")
+    if not email or not clave:
         return jsonify({"error": "Email y clave son obligatorios"}), 400
 
+    token = auth_function().login(email, clave)
     token = auth_function().login(data["email"], data["clave"])
 
     if token:
@@ -38,10 +42,10 @@ def login():
 
 @usuarios_bp.route("/crear", methods=["POST"])
 def crear_usuario():
-    data = request.get_json()
-    crud = CRUD_function()
+    data = request.get_json() or {}
     campos = ["nombres", "apellidos", "edad", "telefono", "email", "clave", "ciudad", "pais"]
     valores = [data.get(c) for c in campos]
+    crud = usuarios_crud()
     new_id = crud.create_user(*valores)
     
     if new_id:
@@ -51,7 +55,7 @@ def crear_usuario():
 @usuarios_bp.route("/listar", methods=["GET"])
 @token_required
 def listar_usuarios():
-    crud = CRUD_function()
+    crud = usuarios_crud()
     usuarios = crud.read_users()
     return jsonify(usuarios), 200
 

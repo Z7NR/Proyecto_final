@@ -1,4 +1,4 @@
-from src.data_base import DBAdvanceManager
+from src.data.data_base import DBAdvanceManager
 
 class Reports(DBAdvanceManager):
     def count_sales_by_user(self, user_id):

@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from src.functions.CRUD import CRUD_function
+from src.crud.usuarios_crud import CRUD_function
 
 ventas_bp = Blueprint("ventas", __name__)
 
