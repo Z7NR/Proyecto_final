@@ -12,16 +12,31 @@ class user_crud(DBAdvanceManager):
             self.get_connection()
             clave_hash = hash_password(clave)
             self.cursor.execute("""
-                INSERT INTO usuarios (nombres, apellidos, edad, telefono, email, clave, ciudad, pais) 
+                INSERT INTO usuarios (nombres, apellidos, edad, telefono, email, clave_hash, ciudad, pais)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """, (nombres, apellidos, edad, telefono, email, clave_hash, ciudad, pais))
             self.conn.commit()
-            print("Usuario insertado con éxito")
+            return self.cursor.lastrowid
+        except sqlite3.IntegrityError as e:
+            # Manejar duplicado por email: devolver id existente
+            msg = str(e)
+            if "UNIQUE constraint failed: usuarios.email" in msg or "usuarios.email" in msg:
+                try:
+                    self.cursor.execute("SELECT id FROM usuarios WHERE email = ?", (email,))
+                    row = self.cursor.fetchone()
+                    if row:
+                        return row[0]  # id existente
+                except Exception:
+                    pass
+            # para otros IntegrityError dejamos que el flujo devuelva None
+            self.exception_error(e)
+            return None
         except sqlite3.Error as e:
             self.exception_error(e)
+            return None
         finally:
             self.close_connection()
-
+            
     def read_user(self):
         try:
             self.get_connection()

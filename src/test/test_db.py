@@ -1,18 +1,17 @@
 import sys
 import os
-import sqlite3
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
 from src.data.data_base import DBAdvanceManager
-from src.crud.usuarios_crud import CRUD_function
+from src.crud.usuarios_crud import user_crud
 
 if __name__ == "__main__":
     db = DBAdvanceManager()
     db.create_user_tables()
-    crud = CRUD_function()
+    crud = user_crud()
     crud.create_user("Ermenejildo", "Perez", 24, "04244560182", "ermejol@email.com", "ermejol666", "Caracas", "Venezuela")
     crud.delete_user("4")
     print(crud.read_user())

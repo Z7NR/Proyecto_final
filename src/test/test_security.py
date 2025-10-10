@@ -1,7 +1,7 @@
 import pytest
 from src.utils.security import hash_password, check_password
 
-def test_hash_and_check_password_success():
+def hash_check_password():#
 
     pwd = "MiContraseñaDePrueba123!"
     hashed = hash_password(pwd)
@@ -11,7 +11,7 @@ def test_hash_and_check_password_success():
 
     assert check_password(pwd, hashed) is True
 
-def test_check_password_failure():
+def check_password_failure():
     pwd = "MiContraseñaDePrueba123!"
     wrong = "OtraContra!"
     hashed = hash_password(pwd)
@@ -26,3 +26,11 @@ def test_invalid_inputs():
     
     with pytest.raises(ValueError):
         hash_password(None)
+
+def test_same_password():
+    pwd = "repite_esta"
+    h1 = hash_password(pwd)
+    h2 = hash_password(pwd)
+    assert h1 != h2
+    assert check_password(pwd, h1) is True
+    assert check_password(pwd, h2) is True

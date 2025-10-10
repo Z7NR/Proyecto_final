@@ -12,7 +12,7 @@ productos_bp = Blueprint('productos', __name__, url_prefix='/api/productos')
 @token_required
 def crear_producto():
     data = request.get_json() or {}
-    nombre = data.get('nombre')
+    nombre = data.get('nombres')
     precio_raw = data.get('precio', 0.0) #hacer aqui una validacion por si usan "," o "."
     stock_raw = data.get('stock', 0)
     

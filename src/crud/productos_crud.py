@@ -1,17 +1,18 @@
 import sqlite3
-import os
+from datetime import datetime
 from src.data.data_base import DBAdvanceManager
 from src.utils.security import hash_password
 
 class product_crud(DBAdvanceManager):
 
-    def create_product(self, nombres, descripcion, precio, categoria, stock, registro):
+    def create_product(self, nombre, descripcion, precio, categoria, stock):
+        registro = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         try:
             self.get_connection()
             self.cursor.execute("""
-                INSERT INTO productos (nombres, descripcion, precio, categoria, stock, registro) 
+                INSERT INTO productos (nombre, descripcion, precio, categoria, stock, registro) 
                 VALUES (?, ?, ?, ?, ?, ?)
-            """, (nombres, descripcion, precio, categoria, stock, registro))
+            """, (nombre, descripcion, precio, categoria, stock, registro))
             self.conn.commit()
             print("Producto insertado con éxito")
         except sqlite3.Error as e:
@@ -56,3 +57,4 @@ class product_crud(DBAdvanceManager):
             self.exception_error(e)
         finally:
             self.close_connection()
+
