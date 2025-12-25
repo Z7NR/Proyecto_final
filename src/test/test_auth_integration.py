@@ -20,5 +20,5 @@ def test_register_and_login_and_verify_token():
 
     payload = auth_function.verify_token(token)
     assert payload is not None
-    assert payload.get("sub") == user_id
+    assert payload.get("user_id") == user_id
 

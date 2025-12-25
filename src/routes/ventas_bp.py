@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from src.crud.usuarios_crud import ventas_crud
+from src.crud.ventas_crud import ventas_crud
 from src.routes.usuarios_bp import token_required
 
 ventas_bp = Blueprint("ventas", __name__, url_prefix="/api/ventas")

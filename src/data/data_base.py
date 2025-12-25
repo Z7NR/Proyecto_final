@@ -7,7 +7,7 @@ class DBAdvanceManager:
 
     def __init__(self):
         load_dotenv()
-        self.DB_PATH = os.getenv("DATABASE_URL", "ecommerce_proyectofinal.db").replace("sqlite:///", "")
+        self.DB_PATH = os.getenv("DATABASE_URL", "ecommerce.db").replace("sqlite:///", "")
         self.conn = None
         self.cursor = None
 
