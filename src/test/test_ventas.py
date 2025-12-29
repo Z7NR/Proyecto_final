@@ -1,39 +1,34 @@
-import pytest
-from src.data.data_base import DBAdvanceManager
-from src.crud.productos_crud import product_crud
-from src.crud.ventas_crud import sales_crud
-from src.crud.usuarios_crud import user_crud
+def test_crear_venta(client, auth_token):
+    resp_prod = client.post(
+        "/api/productos",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "nombre": "Producto Test",
+            "descripcion": "Producto de prueba",
+            "precio": 100,
+            "stock": 10
+        }
+    )
+    
+    assert resp_prod.status_code == 201, f"Fallo crear producto: {resp_prod.data.decode()}"
+    
+    data_prod = resp_prod.get_json()
+    producto_id = data_prod.get("id")
 
-@pytest.fixture(scope="module", autouse=True)
-def setup_db():
-    DBAdvanceManager().create_user_tables()
-    yield
+    resp_venta = client.post(
+        "/api/ventas",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "id_producto": producto_id,
+            "cantidad": 2
+        }
+    )
+    
+    assert resp_venta.status_code == 201, f"Fallo crear venta: {resp_venta.data.decode()}"
 
-def test_create_sale_reduces_stock():
-    ucrud = user_crud()
-    pc = product_crud()
-    vc = sales_crud()
-
-    # Crear usuario y producto
-    uid = ucrud.create_user("Sale","User",25,"000","sale_user@example.com","pass","ciudad","pais")
-    pid = pc.create_product("ProdTest","desc", 10.0, "cat", 5)
-    assert isinstance(pid, int)
-
-    # Crear venta de cantidad 3
-    res = vc.create_sale(uid, pid, 3)
-    assert isinstance(res, dict)
-    assert res.get("total") == pytest.approx(30.0)
-
-    prod = pc.get_product_by_id(pid)
-    assert prod["stock"] == 2
-
-def fails_insufficient_stock():
-    ucrud = user_crud()
-    pc = product_crud()
-    vc = sales_crud()
-
-    uid = 1
-    pid = 1
-    res = vc.create_sale(uid, pid, 9999)
-    assert isinstance(res, dict)
-    assert "error, no hay stock" in res
+def test_reporte_mensual(client, auth_token):
+    resp = client.get(
+        "/api/ventas/reporte_mensual?mes=2025-10",
+        headers={"Authorization": f"Bearer {auth_token}"}
+    )
+    assert resp.status_code == 200

@@ -1,42 +1,39 @@
-import re
 import requests
+import re
 from bs4 import BeautifulSoup
-from src.scrapers.base import BaseScraper
 
-class GenericScraper(BaseScraper):
+class GenericScraper:
 
-    def scrape(self, url: str) -> dict:
-        r = requests.get(
-            url,
-            headers={"User-Agent": "Mozilla/5.0"},
-            timeout=15
-        )
+    def scrape(self, url):
+        headers = {
+            "User-Agent": "Mozilla/5.0"
+        }
+
+        r = requests.get(url, headers=headers, timeout=10)
+        r.raise_for_status()
 
         soup = BeautifulSoup(r.text, "html.parser")
 
+        # Nombre
         title = soup.find("h1") or soup.find("title")
-        nombre = title.get_text(strip=True) if title else None
+        nombre = title.get_text(strip=True) if title else "Producto importado"
 
+        # Precio (heurístico)
         precio = 0.0
-        price_el = soup.select_one("[itemprop=price], .price, .precio")
-        if price_el:
-            raw = re.sub(r"[^0-9.,]", "", price_el.get_text())
-            raw = raw.replace(",", ".")
-            try:
-                precio = float(raw)
-            except ValueError:
-                pass
-
-        desc = ""
-        meta_desc = soup.find("meta", {"name": "description"})
-        if meta_desc:
-            desc = meta_desc.get("content", "")
+        for sel in ["[itemprop=price]", ".price", ".product-price", ".precio"]:
+            el = soup.select_one(sel)
+            if el:
+                raw = re.sub(r"[^0-9.,]", "", el.get_text())
+                try:
+                    precio = float(raw.replace(",", "."))
+                    break
+                except:
+                    pass
 
         return {
             "nombre": nombre,
-            "descripcion": desc,
+            "descripcion": f"Importado desde {url}",
             "precio": precio,
             "categoria": "importado",
-            "stock": 0,
-            "fuente": "generic"
+            "stock": 0
         }

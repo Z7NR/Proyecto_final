@@ -2,17 +2,13 @@ from flask import Blueprint, request, jsonify, make_response
 from io import StringIO
 import csv, json, re
 from src.crud.productos_crud import product_crud
-from src.routes.usuarios_bp import token_required
-from src.scrapers.amazon_scraper import AmazonScraper
-from src.scrapers.ebay_scraper import EbayScraper
-from src.scrapers.aliexpress_scraper import AliExpressScraper
+from src.routes.usuarios_bp import token_required   
 from src.scrapers.generic_scraper import GenericScraper
-from src.scrapers.factory import ScraperFactory
 
 productos_bp = Blueprint('productos', __name__, url_prefix='/api/productos')
 
-@productos_bp.route('/', methods=['POST'])
-@productos_bp.route('/crear', methods=['POST'])
+@productos_bp.route('/', methods=['POST'], strict_slashes=False)
+@productos_bp.route('/crear', methods=['POST'], strict_slashes=False)
 @token_required
 def crear_producto():
     data = request.get_json() or {}
@@ -53,20 +49,17 @@ def crear_producto():
             data.get('categoria', ''),
             stock
         )
-        if new_id:
-            return jsonify({'id': new_id}), 201
-        return jsonify({'error': 'No se pudo crear producto'}), 400
-    except Exception as e:
-        try:
-            import sqlite3
-            if isinstance(e, sqlite3.IntegrityError):
-                return jsonify({'error': 'Conflicto en la base de datos (posible duplicado)'}), 409
-        except Exception:
-            pass
-        print(f"Error al crear producto: {e}")
-        return jsonify({'error': 'Error interno'}), 500
+        
+        if new_id is not None:
+            return jsonify({'id': new_id, 'message': 'Producto creado'}), 201
+        
+        return jsonify({'error': 'No se pudo crear producto en la base de datos'}), 400
 
-@productos_bp.route('/', methods=['GET'])
+    except Exception as e:
+        print(f"Error al crear producto: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@productos_bp.route("", methods=['GET'])
 def listar_productos():
     crud = product_crud()
 
@@ -147,7 +140,7 @@ def exportar_productos():
 
 @productos_bp.route('/import', methods=['POST'])
 @token_required
-def importar_producto_por_url():
+def importar_producto():
     data = request.get_json() or {}
     url = data.get("url")
 
@@ -155,11 +148,8 @@ def importar_producto_por_url():
         return jsonify({"error": "url requerida"}), 400
 
     try:
-        scraper = ScraperFactory.get_scraper(url)
+        scraper = GenericScraper()
         producto = scraper.scrape(url)
-
-        if not producto.get("nombre"):
-            return jsonify({"error": "No se pudo extraer el producto"}), 400
 
         crud = product_crud()
         new_id = crud.create_product(
@@ -173,33 +163,10 @@ def importar_producto_por_url():
         return jsonify({
             "id": new_id,
             "nombre": producto["nombre"],
-            "precio": producto["precio"],
-            "fuente": producto["fuente"]
+            "precio": producto["precio"]
         }), 201
 
     except Exception as e:
-        print("IMPORT ERROR:", e)
-        return jsonify({"error": "Error al importar producto"}), 500
+        return jsonify({"error": "No se pudo importar el producto"}), 500
+
     
-@productos_bp.route('/import/preview', methods=['POST'])
-@token_required
-def preview_producto_por_url():
-    data = request.get_json() or {}
-    url = data.get("url")
-
-    if not url:
-        return jsonify({"error": "url requerida"}), 400
-
-    try:
-        scraper = ScraperFactory.get_scraper(url)
-        producto = scraper.scrape(url)
-
-        if not producto.get("nombre"):
-            return jsonify({"error": "No se pudo extraer el producto"}), 400
-
-        producto["preview"] = True
-        return jsonify(producto), 200
-
-    except Exception as e:
-        print("PREVIEW ERROR:", e)
-        return jsonify({"error": "Error al previsualizar producto"}), 500

@@ -11,34 +11,44 @@ def token_required(f):
         auth_header = request.headers.get("Authorization", None)
         if not auth_header:
             return jsonify({"error": "Token faltante"}), 401
+        
         parts = auth_header.split()
         if len(parts) != 2 or parts[0].lower() != "bearer":
             return jsonify({"error": "Formato de header Authorization inválido"}), 401
+        
         token = parts[1]
         payload = verify_token(token)
+        
         if not payload:
             return jsonify({"error": "Token inválido o expirado"}), 401
-        # pasamos payload como primer argumento de la función protegida
+        
         g.user_payload = payload
-        g.user_id = payload.get("sub")
+        g.user_id = int(payload.get("sub"))
+        
         return f(*args, **kwargs)
     return decorated
 
 @usuarios_bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json() or {}
+
     email = data.get("email")
     clave = data.get("clave")
+
     if not email or not clave:
         return jsonify({"error": "Email y clave son obligatorios"}), 400
 
     token = auth_function().login(email, clave)
-    token = auth_function().login(data["email"], data["clave"])
 
-    if token:
-        return jsonify({"token": token}), 200
-    else:
+    if not token:
         return jsonify({"error": "Credenciales inválidas"}), 401
+
+    print("LOGIN NUEVO EJECUTADO")
+    return jsonify({"access_token": token}), 200
+
+    return jsonify({
+        "token": token
+    }), 200
 
 @usuarios_bp.route("/crear", methods=["POST"])
 def crear_usuario():

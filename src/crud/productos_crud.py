@@ -2,9 +2,6 @@ import sqlite3
 from datetime import datetime
 from src.data.data_base import DBAdvanceManager
 from src.utils.security import hash_password
-from src.scrapers.amazon_scraper import AmazonScraper
-from src.scrapers.ebay_scraper import EbayScraper
-from src.scrapers.aliexpress_scraper import AliExpressScraper
 from src.scrapers.generic_scraper import GenericScraper
 
 class product_crud(DBAdvanceManager):
@@ -42,23 +39,22 @@ class product_crud(DBAdvanceManager):
         finally:
             self.close_connection()
 
-    def update_product(self, product_id, campos):
+    def update_product(self, product_id: int, fields: dict):
         try:
-            self.get_connection()
+            if not fields:
+                return False
 
-            # Genera dinámicamente: "nombre = ?, precio = ?"
-            columnas = ", ".join([f"{k} = ?" for k in campos.keys()])
-
-            # Valores para el UPDATE
-            valores = list(campos.values())
+            columnas = ", ".join([f"{k} = ?" for k in fields.keys()])
+            valores = list(fields.values())
             valores.append(product_id)
 
+            self.get_connection()
             self.cursor.execute(
                 f"UPDATE productos SET {columnas} WHERE id = ?",
                 valores
             )
-
             self.conn.commit()
+
             return self.cursor.rowcount > 0
 
         except sqlite3.Error as e:
@@ -67,6 +63,7 @@ class product_crud(DBAdvanceManager):
 
         finally:
             self.close_connection()
+
 
     def delete_product(self, product_id: int):
         try: 
